@@ -151,7 +151,11 @@ export function registerTemplateTools(
 				);
 			}
 
-			return createJsonResponse(templates);
+			return createJsonResponse({
+				page: data.page,
+				page_count: data.page_count,
+				templates,
+			});
 		}, "get-exercise-templates"),
 	);
 
@@ -292,6 +296,11 @@ export function registerTemplateTools(
 
 			return createJsonResponse({
 				id: response?.id,
+				title,
+				exercise_type: exerciseType,
+				equipment_category: equipmentCategory,
+				muscle_group: muscleGroup,
+				other_muscles: otherMuscles,
 				message: "Exercise template created successfully",
 			});
 		}, "create-exercise-template"),

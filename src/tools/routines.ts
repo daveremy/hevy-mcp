@@ -183,7 +183,11 @@ export function registerRoutineTools(
 				);
 			}
 
-			return createJsonResponse(routines);
+			return createJsonResponse({
+				page: data.page,
+				page_count: data.page_count,
+				routines,
+			});
 		}, "get-routines"),
 	);
 

@@ -83,7 +83,11 @@ export function registerWorkoutTools(
 				);
 			}
 
-			return createJsonResponse(workouts);
+			return createJsonResponse({
+				page: data.page,
+				page_count: data.page_count,
+				workouts,
+			});
 		}, "get-workouts"),
 	);
 
@@ -166,7 +170,11 @@ export function registerWorkoutTools(
 				);
 			}
 
-			return createJsonResponse(events);
+			return createJsonResponse({
+				page: data.page,
+				page_count: data.page_count,
+				events,
+			});
 		}, "get-workout-events"),
 	);
 

@@ -71,9 +71,11 @@ describe("registerTemplateTools", () => {
 			is_custom: false,
 		};
 		const hevyClient: HevyClient = {
-			getExerciseTemplates: vi
-				.fn()
-				.mockResolvedValue({ exercise_templates: [template] }),
+			getExerciseTemplates: vi.fn().mockResolvedValue({
+				page: 1,
+				page_count: 3,
+				exercise_templates: [template],
+			}),
 		} as unknown as HevyClient;
 
 		registerTemplateTools(server, hevyClient);
@@ -86,8 +88,16 @@ describe("registerTemplateTools", () => {
 			pageSize: 5,
 		});
 
-		const parsed = JSON.parse(response.content[0].text) as unknown[];
-		expect(parsed).toEqual([formatExerciseTemplate(template)]);
+		const parsed = JSON.parse(response.content[0].text) as {
+			page: number;
+			page_count: number;
+			templates: unknown[];
+		};
+		expect(parsed).toEqual({
+			page: 1,
+			page_count: 3,
+			templates: [formatExerciseTemplate(template)],
+		});
 	});
 
 	it("get-exercise-template returns an empty response when template is not found", async () => {
@@ -191,10 +201,20 @@ describe("registerTemplateTools", () => {
 
 		const parsed = JSON.parse(response.content[0].text) as {
 			id: number | undefined;
+			title: string;
+			exercise_type: string;
+			equipment_category: string;
+			muscle_group: string;
+			other_muscles: string[];
 			message: string;
 		};
 		expect(parsed).toEqual({
 			id: 42,
+			title: "Custom Curl",
+			exercise_type: "weight_reps",
+			equipment_category: "dumbbell",
+			muscle_group: "biceps",
+			other_muscles: ["forearms"],
 			message: "Exercise template created successfully",
 		});
 	});
