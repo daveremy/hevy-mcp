@@ -1,11 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-// Import types from generated client
 import type {
 	GetV1RoutineFolders200,
 	GetV1RoutineFoldersFolderid200,
 	PostV1RoutineFolders201,
-	RoutineFolder,
 } from "../generated/client/types/index.js";
 import { withErrorHandling } from "../utils/error-handler.js";
 import { formatRoutineFolder } from "../utils/formatters.js";
@@ -52,11 +50,7 @@ export function registerFolderTools(
 				pageSize,
 			});
 
-			// Process routine folders to extract relevant information
-			const folders =
-				data?.routine_folders?.map((folder: RoutineFolder) =>
-					formatRoutineFolder(folder),
-				) || [];
+			const folders = data?.routine_folders?.map(formatRoutineFolder) || [];
 
 			if (folders.length === 0) {
 				return createEmptyResponse(
@@ -136,10 +130,7 @@ export function registerFolderTools(
 			}
 
 			const folder = formatRoutineFolder(data);
-			return createJsonResponse(folder, {
-				pretty: true,
-				indent: 2,
-			});
+			return createJsonResponse(folder);
 		}, "create-routine-folder"),
 	);
 }

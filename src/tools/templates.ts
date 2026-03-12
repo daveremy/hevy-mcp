@@ -141,7 +141,6 @@ export function registerTemplateTools(
 					pageSize,
 				});
 
-			// Process exercise templates to extract relevant information
 			const templates =
 				data?.exercise_templates?.map(formatExerciseTemplate) || [];
 
