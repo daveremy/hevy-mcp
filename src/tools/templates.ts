@@ -1,14 +1,14 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-// Import types from generated client
 import type {
-	ExerciseTemplate,
 	GetV1ExerciseHistoryExercisetemplateid200,
 	GetV1ExerciseTemplates200,
 	GetV1ExerciseTemplatesExercisetemplateid200,
 	PostV1ExerciseTemplates200,
 } from "../generated/client/types/index.js";
 import { withErrorHandling } from "../utils/error-handler.js";
+import { ExerciseTemplateCache } from "../utils/exercise-template-cache.js";
+import { filterExerciseTemplates } from "../utils/exercise-template-filter.js";
 import {
 	formatExerciseHistoryEntry,
 	formatExerciseTemplate,
@@ -24,6 +24,41 @@ type HevyClient = ReturnType<
 	typeof import("../utils/hevyClientKubb.js").createClient
 >;
 
+// Shared enums for muscle groups and exercise types
+const muscleGroupEnum = z.enum([
+	"abdominals",
+	"shoulders",
+	"biceps",
+	"triceps",
+	"forearms",
+	"quadriceps",
+	"hamstrings",
+	"calves",
+	"glutes",
+	"abductors",
+	"adductors",
+	"lats",
+	"upper_back",
+	"traps",
+	"lower_back",
+	"chest",
+	"cardio",
+	"neck",
+	"full_body",
+	"other",
+]);
+
+const exerciseTypeEnum = z.enum([
+	"weight_reps",
+	"reps_only",
+	"bodyweight_reps",
+	"bodyweight_assisted_reps",
+	"duration",
+	"weight_duration",
+	"distance_duration",
+	"short_distance_weight",
+]);
+
 /**
  * Register all exercise template-related tools with the MCP server
  */
@@ -31,10 +66,23 @@ export function registerTemplateTools(
 	server: McpServer,
 	hevyClient: HevyClient | null,
 ) {
+	// Create cache instance for filtered searches
+	const templateCache = hevyClient
+		? new ExerciseTemplateCache(hevyClient)
+		: null;
+
 	// Get exercise templates
 	const getExerciseTemplatesSchema = {
 		page: z.coerce.number().int().gte(1).default(1),
 		pageSize: z.coerce.number().int().gte(1).lte(100).default(5),
+		search: z
+			.string()
+			.describe("Case-insensitive search term to filter templates by title")
+			.optional(),
+		muscleGroup: muscleGroupEnum
+			.describe("Filter by primary muscle group")
+			.optional(),
+		type: exerciseTypeEnum.describe("Filter by exercise type").optional(),
 	} as const;
 	type GetExerciseTemplatesParams = InferToolParams<
 		typeof getExerciseTemplatesSchema
@@ -42,7 +90,7 @@ export function registerTemplateTools(
 
 	server.tool(
 		"get-exercise-templates",
-		"Get a paginated list of exercise templates (default and custom) with details like name, category, equipment, and muscle groups. Useful for browsing or searching available exercises.",
+		"Get exercise templates with optional filtering. Supports pagination (page/pageSize) in all modes. With search/muscleGroup/type filters: searches all templates (cached) and returns paginated matching results. Filters are AND-combined.",
 		getExerciseTemplatesSchema,
 		withErrorHandling(async (args: GetExerciseTemplatesParams) => {
 			if (!hevyClient) {
@@ -50,7 +98,43 @@ export function registerTemplateTools(
 					"API client not initialized. Please provide HEVY_API_KEY.",
 				);
 			}
-			const { page, pageSize } = args;
+
+			const { page, pageSize, search, muscleGroup, type } = args;
+			const hasFilters = search || muscleGroup || type;
+
+			if (hasFilters) {
+				// Use cache + filter for search queries
+				if (!templateCache) {
+					throw new Error("Template cache not available.");
+				}
+				const allTemplates = await templateCache.getAllTemplates();
+				const filtered = filterExerciseTemplates(allTemplates, {
+					search,
+					muscleGroup,
+					type,
+				});
+
+				if (filtered.length === 0) {
+					return createEmptyResponse(
+						"No exercise templates found matching the specified filters",
+					);
+				}
+
+				// Apply pagination to filtered results
+				const start = (page - 1) * pageSize;
+				const paged = filtered.slice(start, start + pageSize);
+				const templates = paged.map(formatExerciseTemplate);
+
+				if (templates.length === 0) {
+					return createEmptyResponse(
+						"No exercise templates found for the specified page",
+					);
+				}
+
+				return createJsonResponse(templates);
+			}
+
+			// No filters: existing pagination behavior
 			const data: GetV1ExerciseTemplates200 =
 				await hevyClient.getExerciseTemplates({
 					page,
@@ -59,9 +143,7 @@ export function registerTemplateTools(
 
 			// Process exercise templates to extract relevant information
 			const templates =
-				data?.exercise_templates?.map((template: ExerciseTemplate) =>
-					formatExerciseTemplate(template),
-				) || [];
+				data?.exercise_templates?.map(formatExerciseTemplate) || [];
 
 			if (templates.length === 0) {
 				return createEmptyResponse(
@@ -142,9 +224,7 @@ export function registerTemplateTools(
 				});
 
 			const history =
-				data?.exercise_history?.map((entry) =>
-					formatExerciseHistoryEntry(entry),
-				) || [];
+				data?.exercise_history?.map(formatExerciseHistoryEntry) || [];
 
 			if (history.length === 0) {
 				return createEmptyResponse(
@@ -159,16 +239,7 @@ export function registerTemplateTools(
 	// Create a custom exercise template
 	const createExerciseTemplateSchema = {
 		title: z.string().min(1),
-		exerciseType: z.enum([
-			"weight_reps",
-			"reps_only",
-			"bodyweight_reps",
-			"bodyweight_assisted_reps",
-			"duration",
-			"weight_duration",
-			"distance_duration",
-			"short_distance_weight",
-		]),
+		exerciseType: exerciseTypeEnum,
 		equipmentCategory: z.enum([
 			"none",
 			"barbell",
@@ -180,54 +251,8 @@ export function registerTemplateTools(
 			"suspension",
 			"other",
 		]),
-		muscleGroup: z.enum([
-			"abdominals",
-			"shoulders",
-			"biceps",
-			"triceps",
-			"forearms",
-			"quadriceps",
-			"hamstrings",
-			"calves",
-			"glutes",
-			"abductors",
-			"adductors",
-			"lats",
-			"upper_back",
-			"traps",
-			"lower_back",
-			"chest",
-			"cardio",
-			"neck",
-			"full_body",
-			"other",
-		]),
-		otherMuscles: z
-			.array(
-				z.enum([
-					"abdominals",
-					"shoulders",
-					"biceps",
-					"triceps",
-					"forearms",
-					"quadriceps",
-					"hamstrings",
-					"calves",
-					"glutes",
-					"abductors",
-					"adductors",
-					"lats",
-					"upper_back",
-					"traps",
-					"lower_back",
-					"chest",
-					"cardio",
-					"neck",
-					"full_body",
-					"other",
-				]),
-			)
-			.default([]),
+		muscleGroup: muscleGroupEnum,
+		otherMuscles: z.array(muscleGroupEnum).default([]),
 	} as const;
 	type CreateExerciseTemplateParams = InferToolParams<
 		typeof createExerciseTemplateSchema
@@ -261,6 +286,9 @@ export function registerTemplateTools(
 						other_muscles: otherMuscles,
 					},
 				});
+
+			// Invalidate cache so new template appears in search results
+			templateCache?.invalidate();
 
 			return createJsonResponse({
 				id: response?.id,
