@@ -11,7 +11,7 @@
 				"package": "@daveremy/hevy-mcp"
 			},
 			"description": "MCP server for the Hevy fitness tracking API",
-			"version": "0.1.3"
+			"version": "0.2.0"
 		}
 	]
 }

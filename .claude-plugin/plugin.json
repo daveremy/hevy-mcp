@@ -1,7 +1,7 @@
 {
 	"name": "hevy-mcp",
 	"description": "MCP server for the Hevy fitness tracking API — workouts, routines, exercises, and more",
-	"version": "0.1.3",
+	"version": "0.2.0",
 	"author": {
 		"name": "daveremy"
 	},
@@ -10,10 +10,7 @@
 	"mcpServers": {
 		"hevy-mcp": {
 			"command": "npx",
-			"args": [
-				"-y",
-				"@daveremy/hevy-mcp"
-			]
+			"args": ["-y", "@daveremy/hevy-mcp"]
 		}
 	}
 }
