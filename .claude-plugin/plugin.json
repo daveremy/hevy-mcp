@@ -1,7 +1,7 @@
 {
 	"name": "hevy-mcp",
 	"description": "MCP server for the Hevy fitness tracking API — workouts, routines, exercises, and more",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"author": {
 		"name": "daveremy"
 	},
