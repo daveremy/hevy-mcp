@@ -2,6 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+> **Attribution:** This project is a fork of [chrisdoc/hevy-mcp](https://github.com/chrisdoc/hevy-mcp), originally created by **Christoph Kieslich**. Published as `@daveremy/hevy-mcp` with Claude Code plugin packaging.
+
 A Model Context Protocol (MCP) server implementation that interfaces with the [Hevy fitness tracking app](https://www.hevyapp.com/) and its [API](https://api.hevyapp.com/docs/). This server enables AI assistants to access and manage workout data, routines, exercise templates, and more through the Hevy API (requires PRO subscription).
 
 ## Features
@@ -14,13 +16,23 @@ A Model Context Protocol (MCP) server implementation that interfaces with the [H
 
 > **Note:** HTTP transport and Docker images are deprecated. The server runs via stdio transport (e.g., `npx hevy-mcp`). Legacy GHCR images remain available but are no longer maintained.
 
+## Claude Code Plugin Install
+
+Install as a Claude Code plugin:
+
+```bash
+claude plugin add @daveremy/hevy-mcp
+```
+
+Then set your Hevy API key when prompted. The `/hevy` skill becomes available for interacting with your fitness data.
+
 ## Quick start
 
 Pick the workflow that fits your setup:
 
 | Scenario | Command | Requirements |
 | --- | --- | --- |
-| One-off stdio run | `HEVY_API_KEY=sk_live... npx -y hevy-mcp` | Node.js ≥ 20, Hevy API key |
+| One-off stdio run | `HEVY_API_KEY=sk_live... npx -y @daveremy/hevy-mcp` | Node.js ≥ 20, Hevy API key |
 | Local development | `pnpm install && pnpm run dev` | `.env` with `HEVY_API_KEY`, pnpm via Corepack |
 
 ## Prerequisites
@@ -37,13 +49,13 @@ Pick the workflow that fits your setup:
 You can launch the server directly without cloning:
 
 ```bash
-HEVY_API_KEY=your_hevy_api_key_here npx -y hevy-mcp
+HEVY_API_KEY=your_hevy_api_key_here npx -y @daveremy/hevy-mcp
 ```
 
 ### Manual Installation
 ```bash
 # Clone the repository
-git clone https://github.com/chrisdoc/hevy-mcp.git
+git clone https://github.com/daveremy/hevy-mcp.git
 cd hevy-mcp
 
 # Install dependencies
@@ -64,7 +76,7 @@ To use this MCP server with Cursor, add/merge this server entry under
 {
   "hevy-mcp": {
     "command": "npx",
-    "args": ["-y", "hevy-mcp"],
+    "args": ["-y", "@daveremy/hevy-mcp"],
     "env": {
       "HEVY_API_KEY": "your-api-key-here"
     }
@@ -91,7 +103,7 @@ entry into it without removing other servers.
   "mcpServers": {
     "hevy-mcp": {
       "command": "npx",
-      "args": ["-y", "hevy-mcp"],
+      "args": ["-y", "@daveremy/hevy-mcp"],
       "env": {
         "HEVY_API_KEY": "your-api-key-here"
       }
@@ -165,9 +177,9 @@ You are likely running an outdated build or trying to connect with an HTTP-based
 
 1. **Update to the latest version:**
    ```bash
-   npx -y hevy-mcp@latest
+   npx -y @daveremy/hevy-mcp@latest
    # or if installed locally:
-   pnpm install hevy-mcp@latest
+   pnpm install @daveremy/hevy-mcp@latest
    ```
 
 2. **Update your client configuration** to use stdio transport instead of HTTP. For example, in Cursor's `~/.cursor/mcp.json`:
@@ -186,7 +198,7 @@ You are likely running an outdated build or trying to connect with an HTTP-based
    {
      "hevy-mcp": {
        "command": "npx",
-       "args": ["-y", "hevy-mcp"],
+       "args": ["-y", "@daveremy/hevy-mcp"],
        "env": {
          "HEVY_API_KEY": "your-api-key-here"
        }
@@ -228,7 +240,7 @@ pnpm start
 
 ### Docker (deprecated)
 
-Docker-based workflows have been retired so we can focus on the stdio-native experience. The bundled `Dockerfile` now exits with a clear message to prevent accidental builds, and `.dockerignore` simply documents the deprecation. Previously published images remain available on GHCR (for example `ghcr.io/chrisdoc/hevy-mcp:latest`), but they are **no longer updated**. For the best experience, run the server locally via `npx hevy-mcp` or your own Node.js runtime.
+Docker-based workflows have been retired so we can focus on the stdio-native experience. The bundled `Dockerfile` now exits with a clear message to prevent accidental builds, and `.dockerignore` simply documents the deprecation. Previously published images remain available on GHCR (for example `ghcr.io/chrisdoc/hevy-mcp:latest`), but they are **no longer updated**. For the best experience, run the server locally via `npx @daveremy/hevy-mcp` or your own Node.js runtime.
 
 ## Available MCP Tools
 
@@ -408,6 +420,19 @@ Kubb generates TypeScript types, API clients, Zod schemas, and mock data from th
 ### Troubleshooting
 
 - **Rollup optional dependency missing**: If you see an error similar to `Cannot find module @rollup/rollup-linux-x64-gnu`, set the environment variable `ROLLUP_SKIP_NODEJS_NATIVE_BUILD=true` before running `pnpm run build`. This forces Rollup to use the pure JavaScript fallback and avoids the npm optional dependency bug on some Linux runners.
+
+## Skills
+
+When installed as a Claude Code plugin, the `/hevy` skill is available with the following subcommands:
+
+| Command | Description |
+|---------|-------------|
+| `/hevy` or `/hevy status` | Quick dashboard of recent activity |
+| `/hevy log` | Log a new workout interactively |
+| `/hevy history` | View recent workout history |
+| `/hevy routines` | Browse and manage routines |
+| `/hevy exercises` | Search exercise templates |
+| `/hevy help` | Show available commands |
 
 ## License
 

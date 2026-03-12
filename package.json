@@ -1,28 +1,32 @@
 {
-	"name": "hevy-mcp",
-	"version": "1.20.10",
+	"name": "@daveremy/hevy-mcp",
+	"version": "0.1.0",
 	"main": "dist/index.mjs",
 	"module": "src/index.ts",
 	"types": "dist/index.d.mts",
 	"files": [
 		"dist",
-		"README.md"
+		"README.md",
+		".claude-plugin/",
+		"skills/"
 	],
-	"access": "public",
+	"publishConfig": {
+		"access": "public"
+	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/chrisdoc/hevy-mcp.git"
+		"url": "git+https://github.com/daveremy/hevy-mcp.git"
 	},
 	"bugs": {
-		"url": "https://github.com/chrisdoc/hevy-mcp/issues"
+		"url": "https://github.com/daveremy/hevy-mcp/issues"
 	},
-	"homepage": "https://github.com/chrisdoc/hevy-mcp#readme",
+	"homepage": "https://github.com/daveremy/hevy-mcp#readme",
 	"bin": {
 		"hevy-mcp": "dist/cli.mjs"
 	},
 	"scripts": {
 		"inspect": "pnpm run build && pnpm dlx @modelcontextprotocol/inspector@latest node --env-file .env dist/index.mjs",
-		"inspect:npm": "pnpm dlx @modelcontextprotocol/inspector@latest pnpm dlx hevy-mcp@latest",
+		"inspect:npm": "pnpm dlx @modelcontextprotocol/inspector@latest pnpm dlx @daveremy/hevy-mcp@latest",
 		"test": "node --env-file .env node_modules/vitest/vitest.mjs --run",
 		"openapi": "node ./scripts/openapi-spec.js",
 		"build": "tsdown",
@@ -46,7 +50,10 @@
 		"api",
 		"model context protocol"
 	],
-	"author": "Christoph Kieslich",
+	"author": "daveremy",
+	"contributors": [
+		"Christoph Kieslich"
+	],
 	"license": "MIT",
 	"description": "A Model Context Protocol (MCP) server implementation that interfaces with the Hevy fitness tracking app and its API.",
 	"dependencies": {
@@ -69,6 +76,7 @@
 		"@commitlint/prompt-cli": "^20.4.2",
 		"@semantic-release/changelog": "^6.0.3",
 		"@semantic-release/commit-analyzer": "^13.0.1",
+		"@semantic-release/exec": "^7.1.0",
 		"@semantic-release/git": "^10.0.1",
 		"@semantic-release/github": "^12.0.6",
 		"@semantic-release/npm": "^13.1.4",

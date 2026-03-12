@@ -1,6 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-// Import types from generated client
 import type {
 	GetV1Routines200,
 	GetV1RoutinesRoutineid200,
@@ -16,17 +15,14 @@ import type {
 } from "../generated/client/types/index.js";
 import { withErrorHandling } from "../utils/error-handler.js";
 import { formatRoutine } from "../utils/formatters.js";
+import type { HevyClient } from "../utils/hevyClient.js";
 import { parseJsonArray } from "../utils/json-parser.js";
 import {
 	createEmptyResponse,
 	createJsonResponse,
 } from "../utils/response-formatter.js";
 import type { InferToolParams } from "../utils/tool-helpers.js";
-
-// Type definitions for the routine operations
-type HevyClient = ReturnType<
-	typeof import("../utils/hevyClientKubb.js").createClient
->;
+import { convertWeightToKg } from "../utils/weight-conversion.js";
 
 function coerceNullishNumberInput(value: unknown): unknown {
 	if (value === null || value === undefined) {
@@ -125,6 +121,28 @@ const repRangeDisplayWarningText =
 	"(input_modifier). See https://github.com/chrisdoc/hevy-mcp/issues/261 for " +
 	"details/workarounds.";
 
+const routineSetSchema = z.object({
+	type: z.enum(["warmup", "normal", "failure", "dropset"]).default("normal"),
+	weight: z.coerce.number().optional().nullable(),
+	weightKg: z.coerce.number().optional().nullable(),
+	weightLbs: z.coerce.number().optional().nullable(),
+	reps: zNullableInt,
+	distance: z.coerce.number().int().optional(),
+	distanceMeters: z.coerce.number().int().optional(),
+	duration: z.coerce.number().int().optional(),
+	durationSeconds: z.coerce.number().int().optional(),
+	customMetric: z.coerce.number().optional(),
+	repRange: zOptionalRepRange,
+});
+
+const routineExerciseSchema = z.object({
+	exerciseTemplateId: z.string().min(1),
+	supersetId: z.coerce.number().nullable().optional(),
+	restSeconds: z.coerce.number().int().min(0).optional(),
+	notes: z.string().optional(),
+	sets: z.array(routineSetSchema),
+});
+
 /**
  * Register all routine-related tools with the MCP server
  */
@@ -202,33 +220,7 @@ export function registerRoutineTools(
 		title: z.string().min(1),
 		folderId: z.coerce.number().nullable().optional(),
 		notes: z.string().optional(),
-		exercises: z.preprocess(
-			parseJsonArray,
-			z.array(
-				z.object({
-					exerciseTemplateId: z.string().min(1),
-					supersetId: z.coerce.number().nullable().optional(),
-					restSeconds: z.coerce.number().int().min(0).optional(),
-					notes: z.string().optional(),
-					sets: z.array(
-						z.object({
-							type: z
-								.enum(["warmup", "normal", "failure", "dropset"])
-								.default("normal"),
-							weight: z.coerce.number().optional(),
-							weightKg: z.coerce.number().optional(),
-							reps: zNullableInt,
-							distance: z.coerce.number().int().optional(),
-							distanceMeters: z.coerce.number().int().optional(),
-							duration: z.coerce.number().int().optional(),
-							durationSeconds: z.coerce.number().int().optional(),
-							customMetric: z.coerce.number().optional(),
-							repRange: zOptionalRepRange,
-						}),
-					),
-				}),
-			),
-		),
+		exercises: z.preprocess(parseJsonArray, z.array(routineExerciseSchema)),
 	} as const;
 	type CreateRoutineParams = InferToolParams<typeof createRoutineSchema>;
 
@@ -256,7 +248,7 @@ export function registerRoutineTools(
 							const reps = typeof set.reps === "number" ? set.reps : fixedReps;
 							return {
 								type: set.type as PostRoutinesRequestSetTypeEnumKey,
-								weight_kg: set.weight ?? set.weightKg ?? null,
+								weight_kg: convertWeightToKg(set),
 								reps: reps ?? null,
 								distance_meters: set.distance ?? set.distanceMeters ?? null,
 								duration_seconds: set.duration ?? set.durationSeconds ?? null,
@@ -314,33 +306,7 @@ export function registerRoutineTools(
 		routineId: z.string().min(1),
 		title: z.string().min(1),
 		notes: z.string().optional(),
-		exercises: z.preprocess(
-			parseJsonArray,
-			z.array(
-				z.object({
-					exerciseTemplateId: z.string().min(1),
-					supersetId: z.coerce.number().nullable().optional(),
-					restSeconds: z.coerce.number().int().min(0).optional(),
-					notes: z.string().optional(),
-					sets: z.array(
-						z.object({
-							type: z
-								.enum(["warmup", "normal", "failure", "dropset"])
-								.default("normal"),
-							weight: z.coerce.number().optional(),
-							weightKg: z.coerce.number().optional(),
-							reps: zNullableInt,
-							distance: z.coerce.number().int().optional(),
-							distanceMeters: z.coerce.number().int().optional(),
-							duration: z.coerce.number().int().optional(),
-							durationSeconds: z.coerce.number().int().optional(),
-							customMetric: z.coerce.number().optional(),
-							repRange: zOptionalRepRange,
-						}),
-					),
-				}),
-			),
-		),
+		exercises: z.preprocess(parseJsonArray, z.array(routineExerciseSchema)),
 	} as const;
 	type UpdateRoutineParams = InferToolParams<typeof updateRoutineSchema>;
 
@@ -370,7 +336,7 @@ export function registerRoutineTools(
 									typeof set.reps === "number" ? set.reps : fixedReps;
 								return {
 									type: set.type as PutRoutinesRequestSetTypeEnumKey,
-									weight_kg: set.weight ?? set.weightKg ?? null,
+									weight_kg: convertWeightToKg(set),
 									reps: reps ?? null,
 									distance_meters: set.distance ?? set.distanceMeters ?? null,
 									duration_seconds: set.duration ?? set.durationSeconds ?? null,

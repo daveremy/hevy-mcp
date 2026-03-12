@@ -139,3 +139,4 @@ dist
 .env
 .env.sentry-build-plugin
 .aider*
+.mcp.json

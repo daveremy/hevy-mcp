@@ -21,6 +21,28 @@ import {
 	createJsonResponse,
 } from "../utils/response-formatter.js";
 import type { InferToolParams } from "../utils/tool-helpers.js";
+import { convertWeightToKg } from "../utils/weight-conversion.js";
+
+const workoutSetSchema = z.object({
+	type: z.enum(["warmup", "normal", "failure", "dropset"]).default("normal"),
+	weight: z.coerce.number().optional().nullable(),
+	weightKg: z.coerce.number().optional().nullable(),
+	weightLbs: z.coerce.number().optional().nullable(),
+	reps: z.coerce.number().int().optional().nullable(),
+	distance: z.coerce.number().int().optional().nullable(),
+	distanceMeters: z.coerce.number().int().optional().nullable(),
+	duration: z.coerce.number().int().optional().nullable(),
+	durationSeconds: z.coerce.number().int().optional().nullable(),
+	rpe: z.coerce.number().optional().nullable(),
+	customMetric: z.coerce.number().optional().nullable(),
+});
+
+const workoutExerciseSchema = z.object({
+	exerciseTemplateId: z.string().min(1),
+	supersetId: z.coerce.number().nullable().optional(),
+	notes: z.string().optional().nullable(),
+	sets: z.array(workoutSetSchema),
+});
 
 /**
  * Register all workout-related tools with the MCP server
@@ -155,32 +177,7 @@ export function registerWorkoutTools(
 		startTime: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
 		endTime: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
 		isPrivate: z.boolean().default(false),
-		exercises: z.preprocess(
-			parseJsonArray,
-			z.array(
-				z.object({
-					exerciseTemplateId: z.string().min(1),
-					supersetId: z.coerce.number().nullable().optional(),
-					notes: z.string().optional().nullable(),
-					sets: z.array(
-						z.object({
-							type: z
-								.enum(["warmup", "normal", "failure", "dropset"])
-								.default("normal"),
-							weight: z.coerce.number().optional().nullable(),
-							weightKg: z.coerce.number().optional().nullable(),
-							reps: z.coerce.number().int().optional().nullable(),
-							distance: z.coerce.number().int().optional().nullable(),
-							distanceMeters: z.coerce.number().int().optional().nullable(),
-							duration: z.coerce.number().int().optional().nullable(),
-							durationSeconds: z.coerce.number().int().optional().nullable(),
-							rpe: z.coerce.number().optional().nullable(),
-							customMetric: z.coerce.number().optional().nullable(),
-						}),
-					),
-				}),
-			),
-		),
+		exercises: z.preprocess(parseJsonArray, z.array(workoutExerciseSchema)),
 	} as const;
 	type CreateWorkoutParams = InferToolParams<typeof createWorkoutSchema>;
 
@@ -209,7 +206,7 @@ export function registerWorkoutTools(
 						notes: exercise.notes ?? null,
 						sets: exercise.sets.map((set) => ({
 							type: set.type as PostWorkoutsRequestSetTypeEnumKey,
-							weight_kg: set.weight ?? set.weightKg ?? null,
+							weight_kg: convertWeightToKg(set),
 							reps: set.reps ?? null,
 							distance_meters: set.distance ?? set.distanceMeters ?? null,
 							duration_seconds: set.duration ?? set.durationSeconds ?? null,
@@ -246,32 +243,7 @@ export function registerWorkoutTools(
 		startTime: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
 		endTime: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/),
 		isPrivate: z.boolean().default(false),
-		exercises: z.preprocess(
-			parseJsonArray,
-			z.array(
-				z.object({
-					exerciseTemplateId: z.string().min(1),
-					supersetId: z.coerce.number().nullable().optional(),
-					notes: z.string().optional().nullable(),
-					sets: z.array(
-						z.object({
-							type: z
-								.enum(["warmup", "normal", "failure", "dropset"])
-								.default("normal"),
-							weight: z.coerce.number().optional().nullable(),
-							weightKg: z.coerce.number().optional().nullable(),
-							reps: z.coerce.number().int().optional().nullable(),
-							distance: z.coerce.number().int().optional().nullable(),
-							distanceMeters: z.coerce.number().int().optional().nullable(),
-							duration: z.coerce.number().int().optional().nullable(),
-							durationSeconds: z.coerce.number().int().optional().nullable(),
-							rpe: z.coerce.number().optional().nullable(),
-							customMetric: z.coerce.number().optional().nullable(),
-						}),
-					),
-				}),
-			),
-		),
+		exercises: z.preprocess(parseJsonArray, z.array(workoutExerciseSchema)),
 	} as const;
 	type UpdateWorkoutParams = InferToolParams<typeof updateWorkoutSchema>;
 
@@ -307,7 +279,7 @@ export function registerWorkoutTools(
 						notes: exercise.notes ?? null,
 						sets: exercise.sets.map((set) => ({
 							type: set.type as PostWorkoutsRequestSetTypeEnumKey,
-							weight_kg: set.weight ?? set.weightKg ?? null,
+							weight_kg: convertWeightToKg(set),
 							reps: set.reps ?? null,
 							distance_meters: set.distance ?? set.distanceMeters ?? null,
 							duration_seconds: set.duration ?? set.durationSeconds ?? null,

@@ -1,0 +1,12 @@
+{
+	"name": "daveremy-plugins",
+	"owner": { "name": "daveremy" },
+	"plugins": [
+		{
+			"name": "hevy-mcp",
+			"source": { "source": "npm", "package": "@daveremy/hevy-mcp" },
+			"description": "MCP server for the Hevy fitness tracking API",
+			"version": "0.1.0"
+		}
+	]
+}
