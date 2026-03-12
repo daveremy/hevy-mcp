@@ -6,7 +6,7 @@
 			"name": "hevy-mcp",
 			"source": { "source": "npm", "package": "@daveremy/hevy-mcp" },
 			"description": "MCP server for the Hevy fitness tracking API",
-			"version": "0.1.0"
+			"version": "0.1.1"
 		}
 	]
 }
