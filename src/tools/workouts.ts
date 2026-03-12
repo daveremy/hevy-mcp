@@ -44,6 +44,45 @@ const workoutExerciseSchema = z.object({
 	sets: z.array(workoutSetSchema),
 });
 
+type WorkoutFields = {
+	title: string;
+	description?: string | null;
+	startTime: string;
+	endTime: string;
+	isPrivate: boolean;
+	exercises: z.infer<typeof workoutExerciseSchema>[];
+};
+
+function buildWorkoutPayload(fields: WorkoutFields): PostWorkoutsRequestBody {
+	const { title, description, startTime, endTime, isPrivate, exercises } =
+		fields;
+	return {
+		workout: {
+			title,
+			description: description ?? null,
+			start_time: startTime,
+			end_time: endTime,
+			is_private: isPrivate,
+			exercises: exercises.map(
+				(exercise): PostWorkoutsRequestExercise => ({
+					exercise_template_id: exercise.exerciseTemplateId,
+					superset_id: exercise.supersetId ?? null,
+					notes: exercise.notes ?? null,
+					sets: exercise.sets.map((set) => ({
+						type: set.type as PostWorkoutsRequestSetTypeEnumKey,
+						weight_kg: convertWeightToKg(set),
+						reps: set.reps ?? null,
+						distance_meters: set.distance ?? set.distanceMeters ?? null,
+						duration_seconds: set.duration ?? set.durationSeconds ?? null,
+						rpe: (set.rpe as PostWorkoutsRequestSetRpeEnumKey | null) ?? null,
+						custom_metric: set.customMetric ?? null,
+					})),
+				}),
+			),
+		},
+	};
+}
+
 /**
  * Register all workout-related tools with the MCP server
  */
@@ -74,8 +113,7 @@ export function registerWorkoutTools(
 				pageSize,
 			});
 
-			const workouts =
-				data?.workouts?.map((workout) => formatWorkout(workout)) || [];
+			const workouts = data?.workouts?.map(formatWorkout) || [];
 
 			if (workouts.length === 0) {
 				return createEmptyResponse(
@@ -199,32 +237,7 @@ export function registerWorkoutTools(
 					"API client not initialized. Please provide HEVY_API_KEY.",
 				);
 			}
-			const { title, description, startTime, endTime, isPrivate, exercises } =
-				args;
-			const workoutPayload: NonNullable<PostWorkoutsRequestBody["workout"]> = {
-				title,
-				description: description ?? null,
-				start_time: startTime,
-				end_time: endTime,
-				is_private: isPrivate,
-				exercises: exercises.map(
-					(exercise): PostWorkoutsRequestExercise => ({
-						exercise_template_id: exercise.exerciseTemplateId,
-						superset_id: exercise.supersetId ?? null,
-						notes: exercise.notes ?? null,
-						sets: exercise.sets.map((set) => ({
-							type: set.type as PostWorkoutsRequestSetTypeEnumKey,
-							weight_kg: convertWeightToKg(set),
-							reps: set.reps ?? null,
-							distance_meters: set.distance ?? set.distanceMeters ?? null,
-							duration_seconds: set.duration ?? set.durationSeconds ?? null,
-							rpe: (set.rpe as PostWorkoutsRequestSetRpeEnumKey | null) ?? null,
-							custom_metric: set.customMetric ?? null,
-						})),
-					}),
-				),
-			};
-			const requestBody: PostWorkoutsRequestBody = { workout: workoutPayload };
+			const requestBody = buildWorkoutPayload(args);
 
 			const data: PostV1Workouts201 =
 				await hevyClient.createWorkout(requestBody);
@@ -236,10 +249,7 @@ export function registerWorkoutTools(
 			}
 
 			const workout = formatWorkout(data);
-			return createJsonResponse(workout, {
-				pretty: true,
-				indent: 2,
-			});
+			return createJsonResponse(workout);
 		}, "create-workout"),
 	);
 
@@ -265,39 +275,8 @@ export function registerWorkoutTools(
 					"API client not initialized. Please provide HEVY_API_KEY.",
 				);
 			}
-			const {
-				workoutId,
-				title,
-				description,
-				startTime,
-				endTime,
-				isPrivate,
-				exercises,
-			} = args;
-			const workoutPayload: NonNullable<PostWorkoutsRequestBody["workout"]> = {
-				title,
-				description: description ?? null,
-				start_time: startTime,
-				end_time: endTime,
-				is_private: isPrivate,
-				exercises: exercises.map(
-					(exercise): PostWorkoutsRequestExercise => ({
-						exercise_template_id: exercise.exerciseTemplateId,
-						superset_id: exercise.supersetId ?? null,
-						notes: exercise.notes ?? null,
-						sets: exercise.sets.map((set) => ({
-							type: set.type as PostWorkoutsRequestSetTypeEnumKey,
-							weight_kg: convertWeightToKg(set),
-							reps: set.reps ?? null,
-							distance_meters: set.distance ?? set.distanceMeters ?? null,
-							duration_seconds: set.duration ?? set.durationSeconds ?? null,
-							rpe: (set.rpe as PostWorkoutsRequestSetRpeEnumKey | null) ?? null,
-							custom_metric: set.customMetric ?? null,
-						})),
-					}),
-				),
-			};
-			const requestBody: PostWorkoutsRequestBody = { workout: workoutPayload };
+			const { workoutId } = args;
+			const requestBody = buildWorkoutPayload(args);
 
 			const data: PutV1WorkoutsWorkoutid200 = await hevyClient.updateWorkout(
 				workoutId,
@@ -311,10 +290,7 @@ export function registerWorkoutTools(
 			}
 
 			const workout = formatWorkout(data);
-			return createJsonResponse(workout, {
-				pretty: true,
-				indent: 2,
-			});
+			return createJsonResponse(workout);
 		}, "update-workout-operation"),
 	);
 }

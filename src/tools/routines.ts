@@ -7,9 +7,6 @@ import type {
 	PostRoutinesRequestSet,
 	PostRoutinesRequestSetTypeEnumKey,
 	PostV1Routines201,
-	PutRoutinesRequestExercise,
-	PutRoutinesRequestSet,
-	PutRoutinesRequestSetTypeEnumKey,
 	PutV1RoutinesRoutineid200,
 	Routine,
 } from "../generated/client/types/index.js";
@@ -20,6 +17,7 @@ import { parseJsonArray } from "../utils/json-parser.js";
 import {
 	createEmptyResponse,
 	createJsonResponse,
+	type McpToolResponse,
 } from "../utils/response-formatter.js";
 import type { InferToolParams } from "../utils/tool-helpers.js";
 import { convertWeightToKg } from "../utils/weight-conversion.js";
@@ -143,6 +141,73 @@ const routineExerciseSchema = z.object({
 	sets: z.array(routineSetSchema),
 });
 
+type RoutineExerciseInput = z.infer<typeof routineExerciseSchema>;
+
+interface RoutineExercisesResult {
+	exercises: PostRoutinesRequestExercise[];
+	usesRepRanges: boolean;
+}
+
+function mapRoutineExercises(
+	exercises: RoutineExerciseInput[],
+): RoutineExercisesResult {
+	let usesRepRanges = false;
+
+	const mapped = exercises.map((exercise): PostRoutinesRequestExercise => {
+		const sets = exercise.sets.map((set): PostRoutinesRequestSet => {
+			const repRange = buildRepRange(set.repRange);
+			const fixedReps = getFixedRepsFromRepRange(repRange);
+			const reps = typeof set.reps === "number" ? set.reps : fixedReps;
+			return {
+				type: set.type as PostRoutinesRequestSetTypeEnumKey,
+				weight_kg: convertWeightToKg(set),
+				reps: reps ?? null,
+				distance_meters: set.distance ?? set.distanceMeters ?? null,
+				duration_seconds: set.duration ?? set.durationSeconds ?? null,
+				custom_metric: set.customMetric ?? null,
+				rep_range: repRange,
+			};
+		});
+
+		if (
+			sets.some(
+				(set) =>
+					set.rep_range != null &&
+					getFixedRepsFromRepRange(set.rep_range) === null,
+			)
+		) {
+			usesRepRanges = true;
+		}
+
+		return {
+			exercise_template_id: exercise.exerciseTemplateId,
+			superset_id: exercise.supersetId ?? null,
+			rest_seconds: exercise.restSeconds ?? null,
+			notes: exercise.notes ?? null,
+			sets,
+		};
+	});
+
+	return { exercises: mapped, usesRepRanges };
+}
+
+function buildRoutineResponse(
+	data: Routine,
+	usesRepRanges: boolean,
+): McpToolResponse {
+	const routine = formatRoutine(data);
+	const response = createJsonResponse(routine);
+
+	if (usesRepRanges) {
+		response.content.push({
+			type: "text",
+			text: repRangeDisplayWarningText,
+		});
+	}
+
+	return response;
+}
+
 /**
  * Register all routine-related tools with the MCP server
  */
@@ -173,9 +238,7 @@ export function registerRoutineTools(
 				pageSize,
 			});
 
-			// Process routines to extract relevant information
-			const routines =
-				data?.routines?.map((routine: Routine) => formatRoutine(routine)) || [];
+			const routines = data?.routines?.map(formatRoutine) || [];
 
 			if (routines.length === 0) {
 				return createEmptyResponse(
@@ -208,9 +271,8 @@ export function registerRoutineTools(
 				);
 			}
 			const { routineId } = args;
-			const data: GetV1RoutinesRoutineid200 = await hevyClient.getRoutineById(
-				String(routineId),
-			);
+			const data: GetV1RoutinesRoutineid200 =
+				await hevyClient.getRoutineById(routineId);
 			if (!data || !data.routine) {
 				return createEmptyResponse(`Routine with ID ${routineId} not found`);
 			}
@@ -238,47 +300,15 @@ export function registerRoutineTools(
 					"API client not initialized. Please provide HEVY_API_KEY.",
 				);
 			}
-			const { title, folderId, notes, exercises } = args;
-			let usesRepRanges = false;
+			const { title, folderId, notes, exercises: rawExercises } = args;
+			const { exercises, usesRepRanges } = mapRoutineExercises(rawExercises);
+
 			const data: PostV1Routines201 = await hevyClient.createRoutine({
 				routine: {
 					title,
 					folder_id: folderId ?? null,
 					notes: notes ?? "",
-					exercises: exercises.map((exercise): PostRoutinesRequestExercise => {
-						const sets = exercise.sets.map((set): PostRoutinesRequestSet => {
-							const repRange = buildRepRange(set.repRange);
-							const fixedReps = getFixedRepsFromRepRange(repRange);
-							const reps = typeof set.reps === "number" ? set.reps : fixedReps;
-							return {
-								type: set.type as PostRoutinesRequestSetTypeEnumKey,
-								weight_kg: convertWeightToKg(set),
-								reps: reps ?? null,
-								distance_meters: set.distance ?? set.distanceMeters ?? null,
-								duration_seconds: set.duration ?? set.durationSeconds ?? null,
-								custom_metric: set.customMetric ?? null,
-								rep_range: repRange,
-							};
-						});
-
-						if (
-							sets.some(
-								(set) =>
-									set.rep_range != null &&
-									getFixedRepsFromRepRange(set.rep_range) === null,
-							)
-						) {
-							usesRepRanges = true;
-						}
-
-						return {
-							exercise_template_id: exercise.exerciseTemplateId,
-							superset_id: exercise.supersetId ?? null,
-							rest_seconds: exercise.restSeconds ?? null,
-							notes: exercise.notes ?? null,
-							sets,
-						};
-					}),
+					exercises,
 				},
 			});
 
@@ -288,20 +318,7 @@ export function registerRoutineTools(
 				);
 			}
 
-			const routine = formatRoutine(data);
-			const response = createJsonResponse(routine, {
-				pretty: true,
-				indent: 2,
-			});
-
-			if (usesRepRanges) {
-				response.content.push({
-					type: "text",
-					text: repRangeDisplayWarningText,
-				});
-			}
-
-			return response;
+			return buildRoutineResponse(data, usesRepRanges);
 		}, "create-routine"),
 	);
 
@@ -324,49 +341,16 @@ export function registerRoutineTools(
 					"API client not initialized. Please provide HEVY_API_KEY.",
 				);
 			}
-			const { routineId, title, notes, exercises } = args;
-			let usesRepRanges = false;
+			const { routineId, title, notes, exercises: rawExercises } = args;
+			const { exercises, usesRepRanges } = mapRoutineExercises(rawExercises);
+
 			const data: PutV1RoutinesRoutineid200 = await hevyClient.updateRoutine(
 				routineId,
 				{
 					routine: {
 						title,
 						notes: notes ?? null,
-						exercises: exercises.map((exercise): PutRoutinesRequestExercise => {
-							const sets = exercise.sets.map((set): PutRoutinesRequestSet => {
-								const repRange = buildRepRange(set.repRange);
-								const fixedReps = getFixedRepsFromRepRange(repRange);
-								const reps =
-									typeof set.reps === "number" ? set.reps : fixedReps;
-								return {
-									type: set.type as PutRoutinesRequestSetTypeEnumKey,
-									weight_kg: convertWeightToKg(set),
-									reps: reps ?? null,
-									distance_meters: set.distance ?? set.distanceMeters ?? null,
-									duration_seconds: set.duration ?? set.durationSeconds ?? null,
-									custom_metric: set.customMetric ?? null,
-									rep_range: repRange,
-								};
-							});
-
-							if (
-								sets.some(
-									(set) =>
-										set.rep_range != null &&
-										getFixedRepsFromRepRange(set.rep_range) === null,
-								)
-							) {
-								usesRepRanges = true;
-							}
-
-							return {
-								exercise_template_id: exercise.exerciseTemplateId,
-								superset_id: exercise.supersetId ?? null,
-								rest_seconds: exercise.restSeconds ?? null,
-								notes: exercise.notes ?? null,
-								sets,
-							};
-						}),
+						exercises,
 					},
 				},
 			);
@@ -377,20 +361,7 @@ export function registerRoutineTools(
 				);
 			}
 
-			const routine = formatRoutine(data);
-			const response = createJsonResponse(routine, {
-				pretty: true,
-				indent: 2,
-			});
-
-			if (usesRepRanges) {
-				response.content.push({
-					type: "text",
-					text: repRangeDisplayWarningText,
-				});
-			}
-
-			return response;
+			return buildRoutineResponse(data, usesRepRanges);
 		}, "update-routine"),
 	);
 }
