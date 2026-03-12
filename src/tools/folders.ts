@@ -64,7 +64,11 @@ export function registerFolderTools(
 				);
 			}
 
-			return createJsonResponse(folders);
+			return createJsonResponse({
+				page: data.page,
+				page_count: data.page_count,
+				folders,
+			});
 		}, "get-routine-folders"),
 	);
 

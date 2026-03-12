@@ -68,9 +68,11 @@ describe("registerFolderTools", () => {
 			updated_at: "2025-03-25T10:10:00Z",
 		};
 		const hevyClient: HevyClient = {
-			getRoutineFolders: vi
-				.fn()
-				.mockResolvedValue({ routine_folders: [folder] }),
+			getRoutineFolders: vi.fn().mockResolvedValue({
+				page: 1,
+				page_count: 1,
+				routine_folders: [folder],
+			}),
 		} as unknown as HevyClient;
 
 		registerFolderTools(server, hevyClient);
@@ -83,8 +85,16 @@ describe("registerFolderTools", () => {
 			pageSize: 5,
 		});
 
-		const parsed = JSON.parse(response.content[0].text) as unknown[];
-		expect(parsed).toEqual([formatRoutineFolder(folder)]);
+		const parsed = JSON.parse(response.content[0].text) as {
+			page: number;
+			page_count: number;
+			folders: unknown[];
+		};
+		expect(parsed).toEqual({
+			page: 1,
+			page_count: 1,
+			folders: [formatRoutineFolder(folder)],
+		});
 	});
 
 	it("get-routine-folder returns an empty response when folder is not found", async () => {

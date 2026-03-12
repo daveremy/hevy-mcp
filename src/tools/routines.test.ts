@@ -72,7 +72,11 @@ describe("registerRoutineTools", () => {
 			exercises: [],
 		};
 		const hevyClient: HevyClient = {
-			getRoutines: vi.fn().mockResolvedValue({ routines: [routine] }),
+			getRoutines: vi.fn().mockResolvedValue({
+				page: 1,
+				page_count: 2,
+				routines: [routine],
+			}),
 		} as unknown as HevyClient;
 
 		registerRoutineTools(server, hevyClient);
@@ -85,8 +89,16 @@ describe("registerRoutineTools", () => {
 			pageSize: 5,
 		});
 
-		const parsed = JSON.parse(response.content[0].text) as unknown[];
-		expect(parsed).toEqual([formatRoutine(routine)]);
+		const parsed = JSON.parse(response.content[0].text) as {
+			page: number;
+			page_count: number;
+			routines: unknown[];
+		};
+		expect(parsed).toEqual({
+			page: 1,
+			page_count: 2,
+			routines: [formatRoutine(routine)],
+		});
 	});
 
 	it("create-routine maps arguments to the request body and formats the response", async () => {

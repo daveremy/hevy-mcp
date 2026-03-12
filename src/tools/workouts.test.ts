@@ -72,7 +72,9 @@ describe("registerWorkoutTools", () => {
 			exercises: [],
 		};
 		const hevyClient = {
-			getWorkouts: vi.fn().mockResolvedValue({ workouts: [workout] }),
+			getWorkouts: vi
+				.fn()
+				.mockResolvedValue({ page: 1, page_count: 2, workouts: [workout] }),
 		} as unknown as HevyClient;
 
 		registerWorkoutTools(server, hevyClient);
@@ -85,8 +87,16 @@ describe("registerWorkoutTools", () => {
 			pageSize: 5,
 		});
 
-		const parsed = JSON.parse(response.content[0].text) as unknown[];
-		expect(parsed).toEqual([formatWorkout(workout)]);
+		const parsed = JSON.parse(response.content[0].text) as {
+			page: number;
+			page_count: number;
+			workouts: unknown[];
+		};
+		expect(parsed).toEqual({
+			page: 1,
+			page_count: 2,
+			workouts: [formatWorkout(workout)],
+		});
 	});
 
 	it("get-workout returns an empty response when workout is not found", async () => {
